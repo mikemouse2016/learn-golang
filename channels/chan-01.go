@@ -2,8 +2,9 @@ package main
 
 import (
 	"log"
-	"fmt"
 	"time"
+	"fmt"
+	"math/rand"
 )
 
 type Disp struct {
@@ -36,16 +37,41 @@ func (d *Disp) Start() {
 	}()
 }
 
-func (d *Disp) dispAdd(i int) {
+func (d *Disp) registerChan(i int) {
 	for n := 1; n <= i; n++ {
 		messageChan := make(chan string)
 		d.newClient <- messageChan
 		go func(id int) {
-			//j := i
-			msg := <-messageChan
-			log.Printf(" %d msg: %v", id, msg)
+			//self destruct
+			go func() {
+				rnd := time.Duration(rand.Intn(95) + 5) * time.Second
+				log.Println("chan:", messageChan, "destruct in:", rnd)
+				select {
+				case <-time.After(rnd):
+					d.deadClient <- messageChan
+				}
+			}()
+
+			for {
+				msg, ok := <-messageChan
+				if !ok {
+					// If our messageChan was closed, this means that the client has
+					// disconnected.
+					break
+				}
+				//log.Printf(" %d msg: %v", id, msg)
+				if msg == "0" {
+					break
+				}
+			}
 		}(n)
+		time.Sleep(1 * time.Second)
+
 	}
+}
+
+func (d *Disp) chanDel() {
+
 }
 
 func main() {
@@ -56,11 +82,22 @@ func main() {
 		make(chan string),
 	}
 	d.Start()
-	d.dispAdd(3)
-	fmt.Println("Enter text: ")
-	text := ""
-	fmt.Scanln(&text)
-	fmt.Println(text)
-	d.message <- text
-	time.Sleep(5 * time.Second)
+	go func() {
+		for {
+			d.registerChan(100)
+		}
+	}()
+	//fmt.Println("Enter text: ")
+	//text := ""
+	//fmt.Scanln(&text)
+	//fmt.Println(text)
+	//d.message <- text
+	//d.message <- "test 1"
+	//time.Sleep(5 * time.Second)
+	//d.message <- "test 2"
+	//time.Sleep(5 * time.Second)
+	for i := 0; ; i++ {
+		d.message <- fmt.Sprintf("test %v", i)
+		time.Sleep(5 * time.Second)
+	}
 }
