@@ -1,0 +1,28 @@
+.container {
+	background-color: gray;
+	width: 10em;
+	height: 2em;
+	margin: 1em;
+	text-align: center;
+	
+}
+
+.relay {
+	line-height: 2em;
+	vertical-align: middle;
+	cursor: pointer;
+}
+
+#data {
+	margin-left: 1em;
+	width: 10em;
+	background-color: aqua;
+}
+
+.red {
+	background-color: red;
+}
+
+.green {
+	background-color: green;
+}
