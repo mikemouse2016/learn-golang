@@ -95,10 +95,7 @@ func main() {
 	//fmt.Scanln(&text)
 	//fmt.Println(text)
 	//d.message <- text
-	//d.message <- "test 1"
-	//time.Sleep(5 * time.Second)
-	//d.message <- "test 2"
-	//time.Sleep(5 * time.Second)
+
 	for i := 0; ; i++ {
 		d.message <- fmt.Sprintf("test %v", i)
 		time.Sleep(5 * time.Second)
