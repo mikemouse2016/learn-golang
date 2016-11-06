@@ -10,7 +10,8 @@ func main() {
 		var zeta, s = 0., 0.
 		fmt.Print("Enter s: ")
 		fmt.Scanln(&s)
-		for i := 1.; i <= 1000; i++ {
+
+		for i := 1.; i <= 10000000; i++ {
 			zeta += 1 / math.Pow(i, s)
 		}
 		fmt.Println("zeta:        ", zeta)

@@ -79,5 +79,5 @@ func main() {
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
-	http.ListenAndServeTLS(":443", "server.rsa.crt", "server.rsa.key", nil)
+	http.ListenAndServeTLS(":443", "bmm-srv.hopto.org.crt", "bmm-srv.hopto.org.key", nil)
 }
