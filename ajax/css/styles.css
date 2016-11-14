@@ -13,10 +13,14 @@
 	cursor: pointer;
 }
 
-#data {
+.status {
 	margin-left: 1em;
 	width: 10em;
 	background-color: aqua;
+
+}
+
+#data {
 }
 
 .red {
