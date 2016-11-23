@@ -1,83 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<link rel="stylesheet" href="css/styles.css">
-<title>Raspberry Relay Shield</title>
-<script
-	src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/styles.css">
+    <title>ajax-01</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
 </head>
 <body>
-	<!-- <h3>Yo </h3> -->
-	<div class="container">
-		<div class="divelem" id="elem1">TEST1</div>
-	</div>
-	<div class="container">
-		<div class="divelem" id="elem2">TEST2</div>
-	</div>
+<!-- <h3>Yo </h3> -->
+<div class="container">
+    <div class="divelem" id="elem1">TEST1</div>
+</div>
+<div class="container">
+    <div class="divelem" id="elem2">TEST2</div>
+</div>
 
-		<p id="data">Nimic</p>
-
-	<script type="text/javascript">
-		// On document ready;
-		$(document).ready(
-				function() {
-					console.log("document ready!");
-					// On click on element with class .relay;
-					$(".divelem").click(
-							function() {
-								// get the element clicked
-								var elem = $(this);
-								console.log("Handler for .click() called. "
-										+ elem.attr("id"));
-								// Send id of clicked element and get response from server via ajax
-								// Using the core $.ajax() method
-								$.ajax({
-
-									// The URL for the request
-									url : "/ajax/post.html",
-
-									// The data to send (will be converted to a query string)
-									//data : {
-									//	id : elem.attr("id"),
-									//},
-									data: JSON.stringify({
-										Id: elem.attr("id"),
-										Val: elem.attr("id")
-									}),
-
-									// Whether this is a POST or GET request
-									method : "POST",
-
-									// The type of data we expect back
-									dataType : "json",
-
-									// Code to run if the request succeeds;
-									// The response is passed to the function
-									success : function(data) {
-										$("#data").html(
-												"<strong>"
-														+ "status: ok, data: "
-														+ data.Id + "</strong>");
-										console.log("Success.");
-									},
-
-									// Code to run if the request fails;
-									error : function() {
-										$("#data").html(
-												"<strong>" + "Comm failed!"
-														+ "</strong>");
-										console.log("Error.");
-									},
-
-									// Code to run regardless of success or failure
-									complete : function() {
-										console.log("Complete.");
-									}
-								});
-								// ajax transaction end
-							});
-				});
-	</script>
+<p class="status"><strong id="data">Nimic</strong></p>
+<script src="js/ajax.js"></script>
 </body>
 </html>
