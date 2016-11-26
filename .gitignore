@@ -7,7 +7,7 @@
 _obj
 _test
 
-# intellij idea folders
+# intellij idea folders and files
 .idea
 
 # Architecture specific extensions/prefixes

@@ -27,6 +27,7 @@ func RandServer(ws *websocket.Conn) {
 // This example demonstrates a trivial echo server.
 func main() {
 	http.Handle("/rand", websocket.Handler(RandServer))
+	http.Handle("/", http.FileServer(http.Dir("html")))
 	err := http.ListenAndServe(":12345", nil)
 	if err != nil {
 		panic("ListenAndServe: " + err.Error())
