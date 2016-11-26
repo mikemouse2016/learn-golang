@@ -24,7 +24,7 @@ func RandServer(ws *websocket.Conn) {
 
 }
 
-// This example demonstrates a trivial echo server.
+// This example demonstrates a trivial rand server.
 func main() {
 	http.Handle("/rand", websocket.Handler(RandServer))
 	http.Handle("/", http.FileServer(http.Dir("html")))
