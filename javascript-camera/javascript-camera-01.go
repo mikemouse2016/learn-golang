@@ -20,6 +20,6 @@ func main() {
 	//http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
 	//http.HandleFunc("/ajax/post.html", ajax)
 	http.HandleFunc("/", defaultHandler)
-	//http.ListenAndServe(":8080", nil)
-	http.ListenAndServeTLS(":443", "server.rsa.crt", "server.rsa.key", nil)
+	http.ListenAndServe(":8080", nil)
+	//http.ListenAndServeTLS(":443", "server.rsa.crt", "server.rsa.key", nil)
 }

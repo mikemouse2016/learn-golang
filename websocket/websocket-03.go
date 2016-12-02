@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"math/rand"
 	"net/http"
 	"time"
@@ -11,22 +10,24 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-// Echo the data received on the WebSocket.
-func EchoServer(ws *websocket.Conn) {
-rand.Seed(42)
+// Send random data to WebSocket.
+func RandServer(ws *websocket.Conn) {
+	defer ws.Close()
+	rand.Seed(42)
 	for {
-	i := rand.Intn(30)
-		io.WriteString(ws, strconv.Itoa(i))
+		i := rand.Intn(100) - 50
+		//io.WriteString(ws, strconv.Itoa(i))
+		ws.Write([]byte(strconv.Itoa(i)))
 		//log.Println(strconv.Itoa(i))
-		//io.WriteString(ws, "1")
 		time.Sleep(500 * time.Millisecond)
 	}
 
 }
 
-// This example demonstrates a trivial echo server.
+// This example demonstrates a trivial rand server.
 func main() {
-	http.Handle("/echo", websocket.Handler(EchoServer))
+	http.Handle("/rand", websocket.Handler(RandServer))
+	http.Handle("/", http.FileServer(http.Dir("html")))
 	err := http.ListenAndServe(":12345", nil)
 	if err != nil {
 		panic("ListenAndServe: " + err.Error())

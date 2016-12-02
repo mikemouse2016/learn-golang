@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="text/javascript" src="smoothie.js"></script>
+</head>
+<body>
+<canvas id="smoothie-chart" width="500" height="100"></canvas>
+    <script type="text/javascript">
+        var socket = new WebSocket("ws://localhost:12345/rand");
+
+        //data
+        socket.onmessage = function (event) {
+            console.log(event.data);
+            series.append(new Date().getTime(), event.data);
+        };
+        //chart
+        var chart = new SmoothieChart({maxValue: 60, minValue: -60}),
+                canvas = document.getElementById('smoothie-chart'),
+                series = new TimeSeries();
+
+        chart.addTimeSeries(series, {lineWidth: 2, strokeStyle: '#00ff00'});
+        chart.streamTo(canvas, 500);
+    </script>
+</body>
+</html>
