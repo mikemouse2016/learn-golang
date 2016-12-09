@@ -119,7 +119,7 @@ var ci ConnInfo
 
 func main() {
 
-	http.Handle("/subs/ro", http.StripPrefix("/subs/ro", http.FileServer(http.Dir("subs/ro/"))))
+	http.Handle("/subs/ro/", http.StripPrefix("/subs/ro/", http.FileServer(http.Dir("subs/ro"))))
 	http.HandleFunc("/", index)
 	http.HandleFunc("/upload", upload)
 	http.ListenAndServe(":8080", nil)
