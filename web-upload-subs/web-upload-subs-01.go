@@ -67,7 +67,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		io.Copy(f, file)
 
 		//TODO convert sub
-		execCmd("iconv", "-f", "ISO-8859-2", "-t", "UTF-8", "subs/upload/" + handler.Filename, ">", "subs/ro/" + handler.Filename)
+		//execCmd("iconv", "-f", "ISO-8859-2", "-t", "UTF-8", "subs/upload/" + handler.Filename, ">", "subs/ro/" + handler.Filename)
 		execCmd("sh", "-c", "iconv -f ISO-8859-2 -t UTF-8 subs/upload/" + handler.Filename + " > subs/ro/" + handler.Filename)
 		//execCmd("sleep", "5")
 		//execCmd("ping","google.com")
@@ -119,7 +119,7 @@ var ci ConnInfo
 
 func main() {
 
-	http.Handle("/subs", http.StripPrefix("/subs", http.FileServer(http.Dir("subs"))))
+	http.Handle("/subs/ro", http.StripPrefix("/subs/ro", http.FileServer(http.Dir("subs/ro/"))))
 	http.HandleFunc("/", index)
 	http.HandleFunc("/upload", upload)
 	http.ListenAndServe(":8080", nil)
