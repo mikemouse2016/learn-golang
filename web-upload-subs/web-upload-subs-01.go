@@ -9,34 +9,32 @@ import (
 	"strconv"
 	"os"
 	"html/template"
+	"log"
+	"os/exec"
 )
+
+type ConnInfo struct {
+	Addr, Token string
+}
+
+func index(w http.ResponseWriter, r *http.Request) {
+
+	ci.Addr = r.Host
+	ci.Token = ""
+	t, err := template.ParseFiles("templates/index.html")
+	if err != nil {
+		log.Fatal("WTF dude, error parsing your template.")
+	}
+
+	// Render the template, writing to `w`.
+	t.Execute(w, ci)
+}
+
 
 // upload logic
 func upload(w http.ResponseWriter, r *http.Request) {
 
-	type ConnInfo struct {
-		Addr, Token string
-	}
-
-	ci := new(ConnInfo)
-
 	ci.Addr = r.Host
-
-	//ci:= ConnInfo{Addr:"127.0.0.1",Token:""}
-
-	//host, _ := os.Hostname()
-	//addrs, _ := net.LookupIP(host)
-	//for _, addr := range addrs {
-	//	if ipv4 := addr.To4(); ipv4 != nil {
-	//		fmt.Println("IPv4: ", ipv4)
-	//		//fmt.Println("IPv4 url: ", r.URL.Host)
-	//		fmt.Println("IPv4 url: ", r.Host)
-	//		ci.Addr = r.Host
-	//		//ci.Addr = ipv4.String()
-	//
-	//
-	//	}
-	//}
 
 	fmt.Println("method:", r.Method)
 	if r.Method == "GET" {
@@ -45,30 +43,84 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(h, strconv.FormatInt(crutime, 10))
 		ci.Token = fmt.Sprintf("%x", h.Sum(nil))
 
-		t, _ := template.ParseFiles("upload.html")
+		t, err := template.ParseFiles("templates/upload.html")
+		if err != nil {
+			log.Fatal("WTF dude, error parsing your template.")
+
+		}
 		t.Execute(w, ci)
 	} else {
 		r.ParseMultipartForm(32 << 20)
 		file, handler, err := r.FormFile("uploadfile")
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 		defer file.Close()
 		fmt.Fprintf(w, "%v", handler.Header)
-		f, err := os.OpenFile("./test/" + handler.Filename, os.O_WRONLY | os.O_CREATE, 0666)
+		f, err := os.OpenFile("./subs/upload/" + handler.Filename, os.O_WRONLY | os.O_CREATE, 0666)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 		defer f.Close()
 		io.Copy(f, file)
+
+		//TODO convert sub
+		execCmd("iconv", "-f", "ISO-8859-2", "-t", "UTF-8", "subs/upload/" + handler.Filename, ">", "subs/ro/" + handler.Filename)
+		execCmd("sh", "-c", "iconv -f ISO-8859-2 -t UTF-8 subs/upload/" + handler.Filename + " > subs/ro/" + handler.Filename)
+		//execCmd("sleep", "5")
+		//execCmd("ping","google.com")
+		//cmd := exec.Command("sleep", "5")
+		//err = cmd.Start()
+		//if err != nil {
+		//	//log.Fatal(err)
+		//	log.Println(err)
+		//}
+		//log.Printf("Waiting for command to finish...")
+		//err = cmd.Wait()
+		//log.Printf("Command finished with error: %v", err)
+
 	}
 }
 
+//func execCmd2(name string, arg ...string) {
+//	log.Println("Executing:", name)
+//	cmd := exec.Command(name, arg...)
+//	err := cmd.Start()
+//	if err != nil {
+//		//log.Fatal(err)
+//		log.Println(err)
+//	}
+//	log.Printf("Waiting for command to finish...")
+//	err = cmd.Wait()
+//	log.Printf("Command finished with error: %v", err)
+//}
+
+
+func execCmd(name string, arg ...string) {
+	//var cmdOut []byte
+	//var err error
+	//cmd := "python"
+	//args := []string{"/K","echo","relay.py", string(rs)}
+	//args := []string{"relay.py", strconv.Itoa(arg)}
+	log.Println("Executing:", name)
+	cmdOut, err := exec.Command(name, arg...).Output()
+	if err != nil {
+		log.Println(err)
+		//os.Exit(1)
+	}
+	//pyret := string(cmd)
+	log.Println("execCmd response:", string(cmdOut))
+	//log.Println("Successfully exec python", strconv.Itoa(arg))
+}
+
+var ci ConnInfo
+
 func main() {
-	//http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("html5-test"))))
-	//http.HandleFunc("/index.html", defaultHandler)
+
+	http.Handle("/subs", http.StripPrefix("/subs", http.FileServer(http.Dir("subs"))))
+	http.HandleFunc("/", index)
 	http.HandleFunc("/upload", upload)
 	http.ListenAndServe(":8080", nil)
 }
