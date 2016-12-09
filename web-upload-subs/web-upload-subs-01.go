@@ -57,7 +57,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer file.Close()
-		fmt.Fprintf(w, "%v", handler.Header)
+		//fmt.Fprintf(w, "%v", handler.Header)
 		f, err := os.OpenFile("./subs/upload/" + handler.Filename, os.O_WRONLY | os.O_CREATE, 0666)
 		if err != nil {
 			log.Println(err)
@@ -69,6 +69,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		//TODO convert sub
 		//execCmd("iconv", "-f", "ISO-8859-2", "-t", "UTF-8", "subs/upload/" + handler.Filename, ">", "subs/ro/" + handler.Filename)
 		execCmd("sh", "-c", "iconv -f ISO-8859-2 -t UTF-8 subs/upload/" + handler.Filename + " > subs/ro/" + handler.Filename)
+		http.Redirect(w, r, "/subs/ro/", http.StatusFound)
 		//execCmd("sleep", "5")
 		//execCmd("ping","google.com")
 		//cmd := exec.Command("sleep", "5")
