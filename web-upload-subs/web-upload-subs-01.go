@@ -13,7 +13,6 @@ import (
 	"os/exec"
 )
 
-
 func index(w http.ResponseWriter, r *http.Request) {
 
 	//ci.Addr = r.Host
@@ -71,7 +70,8 @@ func upload(w http.ResponseWriter, r *http.Request) {
 
 		//TODO convert sub
 		//execCmd("iconv", "-f", "ISO-8859-2", "-t", "UTF-8", "subs/upload/" + handler.Filename, ">", "subs/ro/" + handler.Filename)
-		execCmd("sh", "-c", "iconv -f ISO-8859-2 -t UTF-8 subs/upload/" + handler.Filename + " > subs/ro/" + handler.Filename)
+		execCmd("sh", "-c", "iconv -f ISO-8859-2 -t UTF-8 subs/upload/" + handler.Filename + " > subs/ro/" +
+			handler.Filename)
 		http.Redirect(w, r, "/subs/ro/", http.StatusFound)
 		//execCmd("sleep", "5")
 		//execCmd("ping","google.com")
@@ -114,11 +114,8 @@ func execCmd(name string, arg ...string) {
 		log.Println(err)
 		//os.Exit(1)
 	}
-	//pyret := string(cmd)
 	log.Println("execCmd response:", string(cmdOut))
-	//log.Println("Successfully exec python", strconv.Itoa(arg))
 }
-
 
 func main() {
 
