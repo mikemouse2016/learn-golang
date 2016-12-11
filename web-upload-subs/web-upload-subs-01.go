@@ -13,26 +13,29 @@ import (
 	"os/exec"
 )
 
-type ConnInfo struct {
-	Addr, Token string
-}
 
 func index(w http.ResponseWriter, r *http.Request) {
 
-	ci.Addr = r.Host
-	ci.Token = ""
+	//ci.Addr = r.Host
+	//ci.Token = ""
 	t, err := template.ParseFiles("templates/index.html")
 	if err != nil {
 		log.Fatal("WTF dude, error parsing your template.")
 	}
 
 	// Render the template, writing to `w`.
-	t.Execute(w, ci)
+	t.Execute(w, r.Host)
 }
 
 
 // upload logic
 func upload(w http.ResponseWriter, r *http.Request) {
+
+	type ConnInfo struct {
+		Addr, Token string
+	}
+
+	var ci ConnInfo
 
 	ci.Addr = r.Host
 
@@ -116,7 +119,6 @@ func execCmd(name string, arg ...string) {
 	//log.Println("Successfully exec python", strconv.Itoa(arg))
 }
 
-var ci ConnInfo
 
 func main() {
 
