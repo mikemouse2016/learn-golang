@@ -9,13 +9,13 @@ import (
 func indexa(w http.ResponseWriter, r *http.Request) {
 
 	type TmplData struct {
-		Head      map[int]string
-		BodySectA map[int]string
+		InfoA string
+		DataA map[int]string
 	}
 
 	//tmplData := new(TmplData)
 	tmplData := &TmplData{
-		make(map[int]string),
+		"",
 		make(map[int]string),
 	}
 
@@ -24,16 +24,16 @@ func indexa(w http.ResponseWriter, r *http.Request) {
 	var htmlTmpl = template.Must(template.ParseGlob("tmpl_a/*.html"))
 
 	//log.Println(htmlTmpl)
-	//m := make(map[int]string)
 
-	tmplData.Head[1] = "script"
+	tmplData.InfoA="titleA"
 
-	tmplData.BodySectA[1] = "a"
-	tmplData.BodySectA[2] = "b"
-	tmplData.BodySectA[3] = "c"
+	tmplData.DataA[1] = "a"
+	tmplData.DataA[2] = "b"
+	tmplData.DataA[3] = "c"
 
 	err := htmlTmpl.ExecuteTemplate(w, "index.html", tmplData)
 	if err != nil {
+		//in prod replace err.error with something else
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
