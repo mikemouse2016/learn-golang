@@ -8,16 +8,26 @@ import (
 // seems more clear system
 func indexa(w http.ResponseWriter, r *http.Request) {
 
+	// Define a struct for sending data to templates
 	type TmplData struct {
 		InfoA string
 		DataA map[int]string
+		T     map[string]string
 	}
 
-	//tmplData := new(TmplData)
-	tmplData := &TmplData{
-		"",
-		make(map[int]string),
-	}
+	// init struct
+	tmplData := new(TmplData)
+	tmplData.DataA = make(map[int]string)
+	tmplData.T = make(map[string]string)
+	//tmplData := &TmplData{
+	//	"",
+	//	make(map[int]string),
+	//	make(map[string]string),
+	//}
+
+	//TODO
+	// maybe implement interfaces as data to be sent to templates
+	//map[interface{}]interface{}
 
 	// these should be global in production for performance - tmpl caching
 	//var templates = template.Must(template.ParseFiles("tmpl/tmpl.html"))
@@ -25,15 +35,19 @@ func indexa(w http.ResponseWriter, r *http.Request) {
 
 	//log.Println(htmlTmpl)
 
-	tmplData.InfoA="titleA"
+	// Add some data
+	tmplData.InfoA = "titleA"
 
 	tmplData.DataA[1] = "a"
 	tmplData.DataA[2] = "b"
 	tmplData.DataA[3] = "c"
 
+	tmplData.T["txt1"] = "bmm"
+
+	// Process template and write to response to client
 	err := htmlTmpl.ExecuteTemplate(w, "index.html", tmplData)
 	if err != nil {
-		//in prod replace err.error with something else
+		//in prod replace err.error() with something else
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -68,9 +82,8 @@ func indexb(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	//http.Handle("/subs/ro/", http.StripPrefix("/subs/ro/", http.FileServer(http.Dir("subs/ro"))))
+	//http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static-dir"))))
 	http.HandleFunc("/tmpla", indexa)
 	http.HandleFunc("/tmplb", indexb)
-	//http.HandleFunc("/upload", upload)
 	http.ListenAndServe(":8080", nil)
 }
