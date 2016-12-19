@@ -2,9 +2,10 @@
 package main
 
 import (
-	"github.com/gorilla/sessions"
 	"html/template"
 	"net/http"
+
+	"github.com/gorilla/sessions"
 )
 
 // seems more clear system

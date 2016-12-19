@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"net/http"
 
-	"errors"
 	"log"
 	"unicode/utf8"
 
@@ -14,10 +13,13 @@ import (
 )
 
 type Users struct {
-	Id    int
-	Email string
-	Pwd   string
+	//Id    int
+	//Email string
+	Pwd string
 }
+
+var store *sessions.CookieStore
+var users = make(map[string]Users)
 
 func index(w http.ResponseWriter, r *http.Request) {
 
@@ -53,67 +55,133 @@ func index(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var ErrCredentialsIncorrect = errors.New("Username and/or password incorrect.")
-var loginURL = "/login"
-var dashboardURL = "/"
-
 func login(w http.ResponseWriter, r *http.Request) {
 	var htmlTmpl = template.Must(template.ParseGlob("tmpl/*.html"))
 
 	session, err := store.Get(r, "session-name")
 	if err != nil {
-		log.Println("store.Get:", err)
-		return
-	}
-
-	err = htmlTmpl.ExecuteTemplate(w, "login.html", nil)
-	if err != nil {
-		log.Println("ExecuteTemplate:", err)
-		//in prod replace err.error() with something else
+		log.Println("store.Get err:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	err = r.ParseForm()
-	if err != nil {
-		log.Println("ParseForm:", err)
 		return
 	}
 
-	// Ensure email field is not obnoxiously long.
-	email := r.PostFormValue("email")
-	if utf8.RuneCountInString(email) > 255 {
-		log.Println("RuneCount:", err)
-		return
-	}
-	//user := ""
-	//userpwd := ""
-	exists := false
-	userAId := 1
-	//userA := "testuser"
-	userApwd := "1234"
-	userAemail := "testemail@example.com"
-
-	if email == userAemail {
-		//user = userA
-		//userpwd = userApwd
-		exists = true
-	}
-
-	password := r.PostFormValue("password")
-
-	if !exists {
-		// Save error in session flash
-		session.AddFlash(ErrCredentialsIncorrect, "_errors")
+	// Retrieve our struct and type-assert it
+	val := session.Values["auth"]
+	loggedIn, ok := val.(bool)
+	if !ok {
+		// Handle the case that it's not an expected type
+		log.Println("session.Value err:", err)
+		//http.Error(w, "Get Lost", http.StatusInternalServerError)
+		//return
+		session.Values["auth"] = false
 		err := session.Save(r, w)
 		if err != nil {
-			log.Println("session.Save (!exists):", err)
+			log.Println("session.Save (auth false) err:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		http.Redirect(w, r, loginURL, 302)
-		log.Println("redirect (!exists)", err)
-		return
+		//loggedIn = false
 	}
+
+	// Now we can use our object
+
+	switch {
+
+	case !loggedIn:
+		err := session.Save(r, w)
+		if err != nil {
+			log.Println("session.Save (new session) err:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = htmlTmpl.ExecuteTemplate(w, "login.html", nil)
+		if err != nil {
+			log.Println("ExecuteTemplate (new session) err:", err)
+			//in prod replace err.error() with something else
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		log.Println("loggedIn false:", loggedIn)
+
+	case loggedIn:
+
+		err = r.ParseForm()
+		if err != nil {
+			log.Println("ParseForm:", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		// Ensure email field is not obnoxiously long.
+		email := r.PostFormValue("email")
+		//todo conv email to lowecase
+		if utf8.RuneCountInString(email) > 255 {
+			log.Println("RuneCount:", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		log.Println("email:", email)
+
+		password := r.PostFormValue("password")
+
+		log.Println("password:", password)
+
+		elem, present := users[email]
+
+		if present && (elem.Pwd == password) {
+			session.Values["auth"] = true
+			err = session.Save(r, w)
+			if err != nil {
+				log.Println("session.Save pwd check err", err)
+				return
+			}
+			http.Redirect(w, r, "/", http.StatusFound)
+		}
+		log.Println("loggedIn true:", loggedIn)
+	}
+
+	//err = r.ParseForm()
+	//if err != nil {
+	//	log.Println("ParseForm:", err)
+	//	return
+	//}
+	//
+	//// Ensure email field is not obnoxiously long.
+	//email := r.PostFormValue("email")
+	//if utf8.RuneCountInString(email) > 255 {
+	//	log.Println("RuneCount:", err)
+	//	return
+	//}
+	//user := ""
+	//userpwd := ""
+	//exists := false
+	//userAId := 1
+	////userA := "testuser"
+	//userApwd := "1234"
+	//userAemail := "testemail@example.com"
+	//
+	//if email == userAemail {
+	//	//user = userA
+	//	//userpwd = userApwd
+	//	exists = true
+	//}
+
+	//password := r.PostFormValue("password")
+
+	//if !exists {
+	//	// Save error in session flash
+	//	session.AddFlash(ErrCredentialsIncorrect, "_errors")
+	//	err := session.Save(r, w)
+	//	if err != nil {
+	//		log.Println("session.Save (!exists):", err)
+	//		return
+	//	}
+	//
+	//	http.Redirect(w, r, loginURL, 302)
+	//	log.Println("redirect (!exists)", err)
+	//	return
+	//}
 
 	//err = bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(password))
 	//if err != nil {
@@ -128,51 +196,53 @@ func login(w http.ResponseWriter, r *http.Request) {
 	//	return 302, err
 	//}
 
-	if password != userApwd {
-		// Save error in session flash
-		session.AddFlash(ErrCredentialsIncorrect, "_errors")
-		err := session.Save(r, w)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		http.Redirect(w, r, loginURL, 302)
-		log.Println(err)
-		return
-
-	}
-
-	session.Values["userID"] = userAId
-	err = session.Save(r, w)
-	if err != nil {
-		log.Println(err)
-		return
-	}
+	//if password != userApwd {
+	//	// Save error in session flash
+	//	session.AddFlash(ErrCredentialsIncorrect, "_errors")
+	//	err := session.Save(r, w)
+	//	if err != nil {
+	//		log.Println(err)
+	//		return
+	//	}
+	//	http.Redirect(w, r, loginURL, 302)
+	//	log.Println(err)
+	//	return
+	//
+	//}
+	//
+	//session.Values["userID"] = userAId
+	//err = session.Save(r, w)
+	//if err != nil {
+	//	log.Println(err)
+	//	return
+	//}
 
 	// Re-direct to the dashboard
-	http.Redirect(w, r, dashboardURL, 302)
+	//http.Redirect(w, r, dashboardURL, 302)
 	//return
 }
 
 // var store = sessions.NewCookieStore([]byte("something-very-secret")
 
-var store *sessions.CookieStore
+//var ErrCredentialsIncorrect = errors.New("Username and/or password incorrect.")
+//var loginURL = "/login"
+//var dashboardURL = "/"
 
 func setup() {
 
 	//var err error
 	// Note that both our authentication and encryption keys, respectively, are 32 bytes - as per
 	// http://www.gorillatoolkit.org/pkg/sessions#NewCookieStore - we need a 32 byte enc. key for AES-256 encrypted cookies
-	store = sessions.NewCookieStore([]byte("nRrHLlHcHH0u7fUz25Hje9m7uJ5SnJzP"),
-		[]byte("CAp1KsJncuMzARpetkqSFLqsBi5ag2bE"))
+	store = sessions.NewCookieStore(
+		[]byte("nRrHLlHcHH0u7fUz25Hje9m7uJ5SnJzP"), []byte("CAp1KsJncuMzARpetkqSFLqsBi5ag2bE"))
 	//if err != nil {
 	//	log.Fatal(err)
 	//}
 
 	store.Options = &sessions.Options{
-		Path: "/",
+		//Path: "/",
 		//Domain:   "http://mydomain.com/",
-		MaxAge:   3600 * 4,
+		MaxAge:   3600,
 		Secure:   true,
 		HttpOnly: true,
 	}
@@ -182,7 +252,7 @@ func main() {
 
 	users := make(map[string]Users)
 	users["test@test.com"] = Users{
-		1, "test@test.com", "1234",
+		"1234",
 	}
 	setup()
 	http.Handle("/res/", http.StripPrefix("/res/", http.FileServer(http.Dir("resources"))))
