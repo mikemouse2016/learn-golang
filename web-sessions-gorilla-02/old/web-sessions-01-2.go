@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"log"
+	"unicode/utf8"
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/sessions"
@@ -21,22 +22,6 @@ var store *sessions.CookieStore
 var users = make(map[string]Users)
 
 func index(w http.ResponseWriter, r *http.Request) {
-
-	session, err := store.Get(r, "session-name")
-	if err != nil {
-		log.Println("store.Get err:", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	val, ok := session.Values["status"].(string)
-
-	log.Println("session.Value index val:", val)
-
-	if ok {
-		log.Println("session.Value index cast ok:", ok)
-
-	}
 
 	// Define a struct for sending data to templates
 	type TmplData struct {
@@ -63,7 +48,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 	tmplData.T["txt1"] = "bmm"
 
 	// Process template and write to response to client
-	err = htmlTmpl.ExecuteTemplate(w, "index.html", tmplData)
+	err := htmlTmpl.ExecuteTemplate(w, "index.html", tmplData)
 	if err != nil {
 		//in prod replace err.error() with something else
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -76,13 +61,6 @@ func login(w http.ResponseWriter, r *http.Request) {
 	log.Println(r)
 	log.Println("---------------------------------------------------------------------------------------")
 
-	var htmlTmpl = template.Must(template.ParseGlob("tmpl/*.html"))
-
-	email := r.PostFormValue("email")
-	password := r.PostFormValue("password")
-
-	log.Println("form values: email:", email, "pwd", password)
-
 	session, err := store.Get(r, "session-name")
 	if err != nil {
 		log.Println("store.Get err:", err)
@@ -90,89 +68,87 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	val, ok := session.Values["status"].(string)
-
-	log.Println("session.Value val:", val)
-
-	if ok {
-		// if val is a string
-		switch val {
-		case "new":
-			log.Println("case new:")
-			mapv, present := users[email]
-			log.Println("cred:", mapv, present, users[email], users)
-
-			if present && (mapv.Pwd == password) {
-				log.Println("cred ok:")
-
-				session.Values["status"] = "loggedIn"
-				err := session.Save(r, w)
-				if err != nil {
-					log.Println("session.Save (status new) err:", err)
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				http.Redirect(w, r, "index", http.StatusFound)
-				return
-			}
-			if !present || (mapv.Pwd != password) {
-				session.Values["status"] = "failed"
-				err := session.Save(r, w)
-				if err != nil {
-					log.Println("session.Save (status failed) err:", err)
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				http.Redirect(w, r, "loginfail", http.StatusFound)
-				return
-			}
-		case "failed":
-
-			session.Values["status"] = "new"
-			err := session.Save(r, w)
-			if err != nil {
-				log.Println("session.Save (status failed) err:", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			err = htmlTmpl.ExecuteTemplate(w, "login.html", nil)
-			if err != nil {
-				log.Println("ExecuteTemplate (failed session) err:", err)
-			}
-		//http.Redirect(w, r, "login", http.StatusFound)
-		default:
-		//http.Redirect(w, r, "index", http.StatusFound)
-		}
-	} else {
-		session.Values["status"] = "new"
+	// Retrieve our struct and type-assert it
+	val := session.Values["auth"]
+	loggedIn, ok := val.(bool)
+	if !ok {
+		// Handle the case that it's not an expected type
+		log.Println("session.Value cast err:", ok)
+		//http.Error(w, "Get Lost", http.StatusInternalServerError)
+		//return
+		session.Values["auth"] = false
 		err := session.Save(r, w)
 		if err != nil {
-			log.Println("session.Save (status new) err:", err)
+			log.Println("session.Save (auth false) err:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
+		//loggedIn = false
+	}
+
+	// Now we can use our object
+
+	switch {
+
+	case !loggedIn || !ok:
+		//err := session.Save(r, w)
+		//if err != nil {
+		//	log.Println("session.Save (!LoggedIn) err:", err)
+		//	http.Error(w, err.Error(), http.StatusInternalServerError)
+		//	return
+		//}
+
+		var htmlTmpl = template.Must(template.ParseGlob("tmpl/*.html"))
+
 		err = htmlTmpl.ExecuteTemplate(w, "login.html", nil)
 		if err != nil {
 			log.Println("ExecuteTemplate (new session) err:", err)
+			//in prod replace err.error() with something else
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		log.Println("loggedIn false:", loggedIn)
+
+	case !loggedIn && ok:
+
+		err = r.ParseForm()
+		if err != nil {
+			log.Println("ParseForm:", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 
-		// if val is not a string type
-		//http.Redirect(w, r, "login", http.StatusFound)
+		// Ensure email field is not obnoxiously long.
+		email := r.PostFormValue("email")
+		//todo conv email to lowecase
+		if utf8.RuneCountInString(email) > 255 {
+			log.Println("RuneCount:", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		log.Println("email:", email)
+
+		password := r.PostFormValue("password")
+
+		log.Println("password:", password)
+
+		elem, present := users[email]
+
+		if present && (elem.Pwd == password) {
+			session.Values["auth"] = true
+			err = session.Save(r, w)
+			if err != nil {
+				log.Println("session.Save pwd check err", err)
+				return
+			}
+			http.Redirect(w, r, "/index", http.StatusFound)
+			return
+		} //else {
+		//	http.Redirect(w, r, "/login", http.StatusFound)
+		//	return
+		//}
+		log.Println("loggedIn true:", loggedIn)
 	}
-
-}
-
-func loginFail(w http.ResponseWriter, r *http.Request) {
-	var htmlTmpl = template.Must(template.ParseGlob("tmpl/*.html"))
-
-	err := htmlTmpl.ExecuteTemplate(w, "loginfail.html", nil)
-	if err != nil {
-		//in prod replace err.error() with something else
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
 }
 
 // var store = sessions.NewCookieStore([]byte("something-very-secret")
@@ -195,7 +171,7 @@ func setup() {
 	store.Options = &sessions.Options{
 		Path: "/",
 		//Domain:   "",
-		MaxAge: 3600,
+		MaxAge:   3600,
 		//Secure:   true,
 		HttpOnly: true,
 	}
@@ -203,7 +179,7 @@ func setup() {
 
 func main() {
 
-	//users := make(map[string]Users)
+	users := make(map[string]Users)
 	users["test@test.com"] = Users{
 		"1234",
 	}
@@ -211,7 +187,6 @@ func main() {
 	http.Handle("/res/", http.StripPrefix("/res/", http.FileServer(http.Dir("res"))))
 	http.HandleFunc("/index", index)
 	http.HandleFunc("/login", login)
-	http.HandleFunc("/loginfail", loginFail)
 
 	http.ListenAndServe(":8080", context.ClearHandler(http.DefaultServeMux))
 	//http.ListenAndServe(":8080", nil)
