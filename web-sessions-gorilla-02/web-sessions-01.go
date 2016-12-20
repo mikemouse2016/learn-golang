@@ -31,12 +31,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 
 	val, ok := session.Values["status"].(string)
 
-	log.Println("session.Value index val:", val)
-
-	if ok {
-		log.Println("session.Value index cast ok:", ok)
-
-	}
+	log.Println("session.Value index val:", val, "cast ok:", ok)
 
 	// Define a struct for sending data to templates
 	type TmplData struct {
@@ -50,7 +45,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 	tmplData.DataA = make(map[int]string)
 	tmplData.T = make(map[string]string)
 
-	// these should be global in production for performance - tmpl caching
+	// TODO these should be global in production for performance - tmpl caching
 	var htmlTmpl = template.Must(template.ParseGlob("tmpl/*.html"))
 
 	// Add some data
@@ -65,16 +60,16 @@ func index(w http.ResponseWriter, r *http.Request) {
 	// Process template and write to response to client
 	err = htmlTmpl.ExecuteTemplate(w, "index.html", tmplData)
 	if err != nil {
-		//in prod replace err.error() with something else
+		// TODO in prod replace err.error() with something else - too much info
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
 
-	log.Println("---------------------------------------------------------------------------------------")
-	log.Println(r)
-	log.Println("---------------------------------------------------------------------------------------")
+	//log.Println("---------------------------------------------------------------------------------------")
+	//log.Println(r)
+	//log.Println("---------------------------------------------------------------------------------------")
 
 	var htmlTmpl = template.Must(template.ParseGlob("tmpl/*.html"))
 
@@ -97,12 +92,13 @@ func login(w http.ResponseWriter, r *http.Request) {
 	if ok {
 		// if val is a string
 		switch val {
+
 		case "new":
 			log.Println("case new:")
-			mapv, present := users[email]
-			log.Println("cred:", mapv, present, users[email], users)
+			mv, present := users[email]
+			log.Println("cred:", mv, present, users[email], users)
 
-			if present && (mapv.Pwd == password) {
+			if present && (mv.Pwd == password) {
 				log.Println("cred ok:")
 
 				session.Values["status"] = "loggedIn"
@@ -115,7 +111,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 				http.Redirect(w, r, "index", http.StatusFound)
 				return
 			}
-			if !present || (mapv.Pwd != password) {
+
+			if !present || (mv.Pwd != password) {
 				session.Values["status"] = "failed"
 				err := session.Save(r, w)
 				if err != nil {
@@ -126,6 +123,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 				http.Redirect(w, r, "loginfail", http.StatusFound)
 				return
 			}
+
 		case "failed":
 
 			session.Values["status"] = "new"
@@ -141,7 +139,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 				log.Println("ExecuteTemplate (failed session) err:", err)
 			}
 		//http.Redirect(w, r, "login", http.StatusFound)
-		default:
+		//default:
 		//http.Redirect(w, r, "index", http.StatusFound)
 		}
 	} else {
@@ -165,6 +163,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginFail(w http.ResponseWriter, r *http.Request) {
+
 	var htmlTmpl = template.Must(template.ParseGlob("tmpl/*.html"))
 
 	err := htmlTmpl.ExecuteTemplate(w, "loginfail.html", nil)
@@ -175,15 +174,8 @@ func loginFail(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// var store = sessions.NewCookieStore([]byte("something-very-secret")
+func init() {
 
-//var ErrCredentialsIncorrect = errors.New("Username and/or password incorrect.")
-//var loginURL = "/login"
-//var dashboardURL = "/"
-
-func setup() {
-
-	//var err error
 	// Note that both our authentication and encryption keys, respectively, are 32 bytes - as per
 	// http://www.gorillatoolkit.org/pkg/sessions#NewCookieStore - we need a 32 byte enc. key for AES-256 encrypted cookies
 	store = sessions.NewCookieStore(
@@ -203,11 +195,10 @@ func setup() {
 
 func main() {
 
-	//users := make(map[string]Users)
 	users["test@test.com"] = Users{
 		"1234",
 	}
-	setup()
+	//setup()
 	http.Handle("/res/", http.StripPrefix("/res/", http.FileServer(http.Dir("res"))))
 	http.HandleFunc("/index", index)
 	http.HandleFunc("/login", login)
