@@ -113,10 +113,10 @@ func login(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if !present || (mv.Pwd != password) {
-				session.Values["status"] = "failed"
+				session.Values["status"] = "loggedOut"
 				err := session.Save(r, w)
 				if err != nil {
-					log.Println("session.Save (status failed) err:", err)
+					log.Println("session.Save (status logedOut - failed) err:", err)
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
@@ -124,7 +124,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-		case "failed":
+		case "loggedOut":
 
 			session.Values["status"] = "new"
 			err := session.Save(r, w)
@@ -138,9 +138,9 @@ func login(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Println("ExecuteTemplate (failed session) err:", err)
 			}
-		//http.Redirect(w, r, "login", http.StatusFound)
-		//default:
-		//http.Redirect(w, r, "index", http.StatusFound)
+			//http.Redirect(w, r, "login", http.StatusFound)
+			//default:
+			//http.Redirect(w, r, "index", http.StatusFound)
 		}
 	} else {
 		session.Values["status"] = "new"
@@ -174,6 +174,38 @@ func loginFail(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func logout(w http.ResponseWriter, r *http.Request) {
+
+	//var htmlTmpl = template.Must(template.ParseGlob("tmpl/*.html"))
+
+	//err := htmlTmpl.ExecuteTemplate(w, "loginfail.html", nil)
+	//if err != nil {
+	//	//in prod replace err.error() with something else
+	//	http.Error(w, err.Error(), http.StatusInternalServerError)
+	//}
+	session, err := store.Get(r, "session-name")
+	if err != nil {
+		log.Println("store.Get logout err:", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	val, ok := session.Values["status"].(string)
+
+	log.Println("session.Value index val:", val, "cast ok:", ok)
+
+	session.Values["status"] = "loggedOut"
+	err = session.Save(r, w)
+	if err != nil {
+		log.Println("session.Save (status logedOut) err:", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "index", http.StatusFound)
+	return
+
+}
+
 func init() {
 
 	// Note that both our authentication and encryption keys, respectively, are 32 bytes - as per
@@ -203,6 +235,7 @@ func main() {
 	http.HandleFunc("/index", index)
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/loginfail", loginFail)
+	http.HandleFunc("/logout", logout)
 
 	http.ListenAndServe(":8080", context.ClearHandler(http.DefaultServeMux))
 	//http.ListenAndServe(":8080", nil)
