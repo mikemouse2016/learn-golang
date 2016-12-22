@@ -1,4 +1,3 @@
-// continue from html-templates-01
 package main
 
 import (
@@ -17,8 +16,17 @@ type Users struct {
 	Pwd string
 }
 
+// Define a struct for sending data to templates
+type TmplData struct {
+	InfoA string
+	DataA map[int]string
+	T     map[string]string
+}
+
 var store *sessions.CookieStore
 var users = make(map[string]Users)
+
+var tmplData = new(TmplData)
 
 func index(w http.ResponseWriter, r *http.Request) {
 
@@ -33,17 +41,17 @@ func index(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("session.Value index val:", val, "cast ok:", ok)
 
-	// Define a struct for sending data to templates
-	type TmplData struct {
-		InfoA string
-		DataA map[int]string
-		T     map[string]string
-	}
+	if ok {
+		switch val {
+		case "loggedIn":
+			tmplData.T["loginStatus"] = "logged in"
+		default:
+			tmplData.T["loginStatus"] = "not logged in"
+		}
 
-	// init struct
-	tmplData := new(TmplData)
-	tmplData.DataA = make(map[int]string)
-	tmplData.T = make(map[string]string)
+	} else {
+		tmplData.T["loginStatus"] = "not logged in"
+	}
 
 	// TODO these should be global in production for performance - tmpl caching
 	var htmlTmpl = template.Must(template.ParseGlob("tmpl/*.html"))
@@ -55,7 +63,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 	tmplData.DataA[2] = "b"
 	tmplData.DataA[3] = "c"
 
-	tmplData.T["txt1"] = "bmm"
+	tmplData.T["txt1"] = "txt1"
 
 	// Process template and write to response to client
 	err = htmlTmpl.ExecuteTemplate(w, "index.html", tmplData)
@@ -138,9 +146,9 @@ func login(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Println("ExecuteTemplate (failed session) err:", err)
 			}
-			//http.Redirect(w, r, "login", http.StatusFound)
-			//default:
-			//http.Redirect(w, r, "index", http.StatusFound)
+		//http.Redirect(w, r, "login", http.StatusFound)
+		//default:
+		//http.Redirect(w, r, "index", http.StatusFound)
 		}
 	} else {
 		session.Values["status"] = "new"
@@ -223,6 +231,11 @@ func init() {
 		//Secure:   true,
 		HttpOnly: true,
 	}
+
+	// init struct
+	tmplData.DataA = make(map[int]string)
+	tmplData.T = make(map[string]string)
+
 }
 
 func main() {
