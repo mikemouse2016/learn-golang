@@ -68,7 +68,7 @@ func (d *Dispatch) registerWorker(i int) {
 					break
 				}
 				//log.Printf(" %d msg: %v", id, msg)
-				if msg == "0" {
+				if ok && (msg == "0") {
 					break
 				}
 				//TODO
@@ -91,10 +91,12 @@ func destroyWorker(deadClient chan chan string, messageChan chan string) {
 			log.Println("Recovered in destroy worker", r)
 		}
 	}()
-	select {
-	case <-time.After(rnd):
-		deadClient <- messageChan
-	}
+	func () {
+		select {
+		case <-time.After(rnd):
+			deadClient <- messageChan
+		}
+	}()
 }
 
 func main() {
@@ -125,8 +127,9 @@ func main() {
 	//d.message <- text
 
 	go func() {
-		time.Sleep(1 * time.Minute)
+		time.Sleep(10 * time.Second)
 		d.message <- "0"
+		d.registerWorker(1)
 	}()
 	// send a message to workers each 5 seconds
 	for i := 0; ; i++ {
