@@ -171,7 +171,7 @@ func setup() {
 	store.Options = &sessions.Options{
 		Path: "/",
 		//Domain:   "",
-		MaxAge:   3600,
+		MaxAge: 3600,
 		//Secure:   true,
 		HttpOnly: true,
 	}

@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-{{template "t-head.html" . -}}
+    {{template "t-head.html" . -}}
 </head>
 <body>
-{{template "t-body.html" . -}}
-<h4>{{.T.loginStatus}}</h4>
-<h4>{{.InfoA}}</h4>
-<h4>{{.T.txt1}}</h4>
-{{range .DataA -}}
-<p>{{.}}</p>
-{{end}}
-<a href="login">Login</a>
-<br>
-<a href="logout">LogOut</a>
+<div class="container-a">
+    {{template "t-body.html" . -}}
+    <h4>{{.T.loginStatus}}</h4>
+    <h4>{{.InfoA}}</h4>
+    <h4>{{.T.txt1}}</h4>
+    {{range .DataA -}}
+    <p>{{.}}</p>
+    {{end}}
+    <a href="login">Login</a>
+    <br>
+    <a href="logout">LogOut</a>
+</div>
 </body>
 </html>

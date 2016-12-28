@@ -146,9 +146,9 @@ func login(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Println("ExecuteTemplate (failed session) err:", err)
 			}
-		//http.Redirect(w, r, "login", http.StatusFound)
-		//default:
-		//http.Redirect(w, r, "index", http.StatusFound)
+			//http.Redirect(w, r, "login", http.StatusFound)
+			//default:
+			//http.Redirect(w, r, "index", http.StatusFound)
 		}
 	} else {
 		session.Values["status"] = "new"
