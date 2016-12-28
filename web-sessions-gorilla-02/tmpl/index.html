@@ -4,17 +4,20 @@
     {{template "t-head.html" . -}}
 </head>
 <body>
-<div class="container-a">
-    {{template "t-body.html" . -}}
-    <h4>{{.T.loginStatus}}</h4>
-    <h4>{{.InfoA}}</h4>
-    <h4>{{.T.txt1}}</h4>
-    {{range .DataA -}}
-    <p>{{.}}</p>
-    {{end}}
-    <a href="login">Login</a>
-    <br>
-    <a href="logout">LogOut</a>
-</div>
+    <div class="ct-a">
+        {{template "t-body.html" . -}}
+        <h4>{{.T.loginStatus}}</h4>
+        <h4>{{.InfoA}}</h4>
+        <h4>{{.T.txt1}}</h4>
+        {{range .DataA -}}
+        <p>{{.}}</p>
+        {{end}}
+        <a href="login">Login</a>
+        <br>
+        <a href="logout">LogOut</a>
+    </div>
+    <div class="ct-a">
+        <h3>Container 2</h3>
+    </div>
 </body>
 </html>

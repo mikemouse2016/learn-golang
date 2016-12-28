@@ -1,5 +1,5 @@
 a {
-  background-color:  lightgrey;
+  background-color:  silver;
   text-decoration: none;
   border: solid;
   border-width: thin;
@@ -8,7 +8,7 @@ a {
   padding-right: 0.5em;
 }
 
-.container-a {
+.ct-a {
   border: solid;
   border-width: thin;
   border-color: silver;
@@ -18,3 +18,17 @@ a {
 
 }
 
+.ct-b {
+  background-color: #c0c0c0;
+}
+
+.light {
+  background-color: white;
+  color: black;
+}
+
+.dark {
+  background-color: #202020;
+  color: white;
+
+}
