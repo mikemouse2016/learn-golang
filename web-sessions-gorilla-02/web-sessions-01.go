@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/sessions"
 )
 
+// struct for authenticated user
 type Users struct {
 	//Id    int
 	//Email string
@@ -23,11 +24,16 @@ type TmplData struct {
 	T     map[string]string
 }
 
+// gorilla cookie store
 var store *sessions.CookieStore
+
+// a map holding authenticated users
 var users = make(map[string]Users)
 
+// variable used to send data to templates
 var tmplData = new(TmplData)
 
+// /index handler
 func index(w http.ResponseWriter, r *http.Request) {
 
 	session, err := store.Get(r, "session-name")
@@ -146,9 +152,9 @@ func login(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Println("ExecuteTemplate (failed session) err:", err)
 			}
-			//http.Redirect(w, r, "login", http.StatusFound)
-			//default:
-			//http.Redirect(w, r, "index", http.StatusFound)
+		//http.Redirect(w, r, "login", http.StatusFound)
+		//default:
+		//http.Redirect(w, r, "index", http.StatusFound)
 		}
 	} else {
 		session.Values["status"] = "new"
@@ -236,21 +242,25 @@ func init() {
 	tmplData.DataA = make(map[int]string)
 	tmplData.T = make(map[string]string)
 
+	users["test@test.com"] = Users{
+		"1234",
+	}
+
 }
 
 func main() {
 
-	users["test@test.com"] = Users{
-		"1234",
-	}
-	//setup()
 	http.Handle("/res/", http.StripPrefix("/res/", http.FileServer(http.Dir("res"))))
 	http.HandleFunc("/index", index)
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/loginfail", loginFail)
 	http.HandleFunc("/logout", logout)
 
-	http.ListenAndServe(":8080", context.ClearHandler(http.DefaultServeMux))
+	//http.ListenAndServe(":8080", context.ClearHandler(http.DefaultServeMux))
 	//http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServeTLS(":443", "pki/server.crt", "pki/server.key", context.ClearHandler(http.DefaultServeMux))
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
 
 }
