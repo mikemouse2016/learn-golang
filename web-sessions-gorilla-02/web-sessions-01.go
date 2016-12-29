@@ -31,6 +31,7 @@ var store *sessions.CookieStore
 var users = make(map[string]Users)
 
 // variable used to send data to templates
+//todo tmplData may have to be declared inside handlers to hold different data for each session
 var tmplData = new(TmplData)
 
 // /index handler
@@ -115,7 +116,9 @@ func login(w http.ResponseWriter, r *http.Request) {
 			if present && (mv.Pwd == password) {
 				log.Println("cred ok:")
 
+				// logged in
 				session.Values["status"] = "loggedIn"
+				//todo add more info to session
 				err := session.Save(r, w)
 				if err != nil {
 					log.Println("session.Save (status new) err:", err)
